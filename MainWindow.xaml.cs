@@ -1,5 +1,7 @@
-﻿using System;
+﻿using BrestaTest.Bresta;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +25,19 @@ namespace BrestaTest
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var files = Directory.GetFiles(".\\scales", "*.cfg", SearchOption.AllDirectories);
+
+            foreach (var file in files)
+            {
+                if (Scale.TryGetScaleFromFile(file, out Scale[] scales))
+                {
+
+                }
+            }
         }
     }
 }

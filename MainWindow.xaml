@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BrestaTest"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="БРЕСТА тест" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -39,7 +39,7 @@
             
             <StackPanel Grid.Row="1" Margin="4 10 0 5">
                 <StackPanel Orientation="Horizontal" >
-                    <Button Padding="4">1. Загрузить конфигурацию</Button>
+                    <Button Padding="4" Click="Button_Click">1. Загрузить конфигурацию</Button>
                     <Button Margin ="10 0 0 0" Padding="4">2. Добавить веса краски</Button>
                 </StackPanel>
             </StackPanel>
