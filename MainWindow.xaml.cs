@@ -33,7 +33,7 @@ namespace BrestaTest
 
             foreach (var file in files)
             {
-                if (Scale.TryGetScaleFromFile(file, out Scale[] scales))
+                if (Config.TryGetScaleFromFile(file, out Config config))
                 {
 
                 }
