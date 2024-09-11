@@ -104,9 +104,11 @@ namespace BrestaTest.Bresta
                         var matchHeader = reHeader.Match(line);
                         if (matchHeader.Success)
                         {
-                            Section header = new Section();
-                            header.Name = SECTION_HEADER;
-                            header.Comment = currentComment;
+                            Section header = new Section
+                            {
+                                Name = SECTION_HEADER,
+                                Comment = currentComment
+                            };
                             currentComment = string.Empty;
 
                             var splitParameters = matchHeader.Groups[1].Value.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
