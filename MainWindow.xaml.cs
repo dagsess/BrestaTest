@@ -26,8 +26,10 @@ namespace BrestaTest
     {
         private Config[] m_scales;
         private Config[] m_boards;
+        private List<ScaleBoard> m_scaleBoards = new List<ScaleBoard>();
 
         private int m_space = 0;
+        private int m_startX = 0;
 
         public MainWindow()
         {
@@ -39,22 +41,35 @@ namespace BrestaTest
 
             m_scales = GetConfigs(Directory.GetFiles(".\\scales", "*.cfg", SearchOption.AllDirectories));
             m_boards = GetConfigs(Directory.GetFiles(".\\boards", "*.cfg", SearchOption.AllDirectories));
+
+            foreach (var scale in m_scales)
+            {
+                var board = m_boards.Where(c => c.ConfigName == scale.ConfigName).FirstOrDefault();
+
+                if(board != null)
+                {
+                    m_scaleBoards.Add(new ScaleBoard { Board = board, Scale = scale });
+                }
+            }
+
             Repaint();
 
-            var orderedScales = m_scales.OrderBy(c => c.Objects.Select(o => o.VisualObject.Left).Min()).ToArray();
+            var orderedScaleBoards = m_scaleBoards.OrderBy(c => c.Left).ToArray();
+
+
+            if(orderedScaleBoards.Length > 1)
+            {
+                m_space = orderedScaleBoards[1].Left - orderedScaleBoards[0].Right;
+                m_startX = orderedScaleBoards[0].Left;
+            }
 
             listScales.Items.Clear();
-
-            if(orderedScales.Length > 1)
+            foreach (var sb in orderedScaleBoards)
             {
-                m_space = orderedScales[1].Left - orderedScales[0].Right;
+                listScales.Items.Add(sb);
             }
 
-            foreach (var scale in orderedScales)
-            {
-                listScales.Items.Add(scale);
-            }
-
+            listBoards.Items.Clear();
             foreach (var board in m_boards)
             {
                 listBoards.Items.Add(board);
@@ -65,15 +80,18 @@ namespace BrestaTest
         {
             canvas.Children.Clear();
 
-            foreach (var vo in m_scales.SelectMany(c=>c.Objects.Select(o=>o.VisualObject)))
+            foreach (var sb in m_scaleBoards)
             {
-                DrawVisualObject(vo);
+                foreach (var vo in sb.Scale.Objects.Select(o => o.VisualObject))
+                {
+                    DrawVisualObject(vo);
+                }
+                foreach (var vo in sb.Board.Objects.Select(o => o.VisualObject))
+                {
+                    DrawVisualObject(vo);
+                }
             }
 
-            foreach (var vo in m_boards.SelectMany(c => c.Objects.Select(o => o.VisualObject)))
-            {
-                DrawVisualObject(vo);
-            }
         }
 
         private Config[] GetConfigs(string[] fileNames)
@@ -107,6 +125,7 @@ namespace BrestaTest
                 element = new Rectangle();
                 (element as Rectangle).Stroke = new SolidColorBrush(visualObject.Stroke);
                 (element as Rectangle).Fill = new LinearGradientBrush(visualObject.Color1, visualObject.Color2, 0);
+
             }
 
 
@@ -117,20 +136,100 @@ namespace BrestaTest
             Canvas.SetLeft(element, visualObject.Left);
             Canvas.SetTop(element, visualObject.Top);
 
-            TextBlock text = new TextBlock
+            if (visualObject.VisualType == TypeVisualObject.Form)
             {
-                Text = visualObject.Name,
-                Foreground = new SolidColorBrush(Colors.Black),
-                Width = visualObject.Width,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(3)
-            };
+                TextBlock text = new TextBlock
+                {
+                    Text = visualObject.Name,
+                    Foreground = new SolidColorBrush(Colors.Black),
+                    Width = visualObject.Width,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(3)
+                };
 
-            /*canvas.Children.Add(text);
-            Canvas.SetLeft(text, visualObject.Left);
-            Canvas.SetTop(text, visualObject.Top);*/
+                canvas.Children.Add(text);
+                Canvas.SetLeft(text, visualObject.Left);
+                Canvas.SetTop(text, visualObject.Top);
+            }
+            
 
 
+
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            var selectedIndex = listScales.SelectedIndex;
+
+            if (selectedIndex <= 0) return;
+
+
+            var selected = (ScaleBoard)listScales.SelectedItem;
+
+            listScales.Items.Remove(selected);
+            listScales.Items.Insert(selectedIndex - 1, selected);
+            listScales.SelectedIndex = selectedIndex - 1;
+
+
+            UpdateCoordinates();
+            Repaint();
+
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var selectedIndex = listScales.SelectedIndex;
+
+            if (selectedIndex < 0 || selectedIndex == listScales.Items.Count - 1) return;
+
+            var selected = (ScaleBoard)listScales.SelectedItem;
+
+            listScales.Items.Remove(selected);
+            listScales.Items.Insert(selectedIndex + 1, selected);
+            listScales.SelectedIndex = selectedIndex + 1;
+
+            UpdateCoordinates();
+            Repaint();
+
+        }
+
+        private void UpdateCoordinates()
+        {
+            for (int i = 0; i < listScales.Items.Count; i++)
+            {
+                var config = (listScales.Items[i] as ScaleBoard);
+                int actualPosition = m_startX;
+
+                for (int j = 0; j <= i - 1; j++)
+                {
+                    actualPosition += (listScales.Items[j] as ScaleBoard).Width + m_space;
+                }
+
+                int shift = actualPosition - config.Left;
+                config.MoveHorizontal(shift);
+            }
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            Random rnd = new Random();
+
+            int i = rnd.Next(0, listScales.Items.Count);
+
+            var sb = listScales.Items[i] as ScaleBoard;
+
+            var clone = sb.Clone();
+            clone.SetName("scalesPaint2");
+            clone.SetBodyColor(Colors.Crimson, Colors.HotPink);
+
+            var last = listScales.Items[i] as ScaleBoard;
+
+            clone.MoveHorizontal(last.Right + m_space - clone.Left);
+
+            listScales.Items.Add(clone);
+
+            UpdateCoordinates();
+            Repaint();
         }
     }
 }

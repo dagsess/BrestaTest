@@ -63,6 +63,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Bresta\ScaleBoard.cs" />
     <Compile Include="Bresta\Config.cs" />
     <Compile Include="Bresta\VisualObject.cs" />
     <Compile Include="MainWindow.xaml.cs">
@@ -71,7 +72,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Parsers\ScaleParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

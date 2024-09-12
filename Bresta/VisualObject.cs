@@ -26,5 +26,22 @@ namespace BrestaTest.Bresta
         public string Name { get; set; }
         public string Sign { get; set; }
         public TypeVisualObject VisualType { get; set; } = TypeVisualObject.Form;
+
+        public VisualObject Clone()
+        {
+            return new VisualObject
+            {
+                Color1 = Color1,
+                Color2 = Color2,
+                Height = Height,
+                Left = Left,
+                Name = Name,
+                Sign = Sign,
+                Stroke = Stroke,
+                Top = Top,
+                VisualType = VisualType,
+                Width = Width
+            };
+        }
     }
 }

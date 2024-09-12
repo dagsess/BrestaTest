@@ -21,7 +21,7 @@ namespace BrestaTest.Bresta
             KeyValueParameter parameter = new KeyValueParameter { };
             var spl = s.Split(':');
 
-            if(spl.Length > 0)
+            if (spl.Length > 0)
             {
                 parameter.Key = spl[0].Trim();
             }
@@ -30,6 +30,11 @@ namespace BrestaTest.Bresta
                 parameter.Value = spl[1].Trim();
             }
             return parameter;
+        }
+
+        public KeyValueParameter Clone()
+        {
+            return new KeyValueParameter { Comment = Comment, Key = Key, Value = Value };
         }
     }
 
@@ -50,6 +55,11 @@ namespace BrestaTest.Bresta
             {
                 Parameters.Add(keyValue.Key, keyValue);
             }
+        }
+
+        public Section Clone()
+        {
+            return new Section { Comment = Comment, Name = Name, Parameters = Parameters.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()) };
         }
 
     }
@@ -73,9 +83,13 @@ namespace BrestaTest.Bresta
 
         public VisualObject VisualObject { get; set; }
 
-        public void MakeVisualObject()
+        public Object Clone()
         {
-
+            return new Object
+            {
+                Sections =  Sections.ToDictionary(kv=>kv.Key, kv=>kv.Value.Clone()),
+                VisualObject = VisualObject.Clone()
+            };
         }
 
     }
@@ -124,6 +138,15 @@ namespace BrestaTest.Bresta
 
         public List<Object> Objects { get; set; } = new List<Object>();
 
+        public Config Clone()
+        {
+            return new Config
+            {
+                ConfigName = ConfigName,
+                Objects = Objects.Select(o=>o.Clone()).ToList()
+            };
+        }
+
         private static IEnumerable<int> SplitStrToIntegerValues(string str)
         {
             List<int> values = new List<int>();
@@ -171,6 +194,11 @@ namespace BrestaTest.Bresta
                 visualObject.Name = header.Parameters[PARAM_NAME].Value;
             }
 
+            if (header.Parameters.ContainsKey(PARAM_SIGN))
+            {
+                visualObject.Sign = header.Parameters[PARAM_SIGN].Value;
+            }
+
             var background = obj.FindKeyValue(PARAM_BACKGROUND);
             if (background != null)
             {
@@ -185,17 +213,14 @@ namespace BrestaTest.Bresta
                 }
             }
 
-            var stroke = obj.FindKeyValue(PARAM_STROKE);
-            if (stroke != null)
-            {
-                visualObject.Stroke = (Color)ColorConverter.ConvertFromString(stroke.Value);
-            }
-
             var type = obj.FindKeyValue(PARAM_TYPE);
             if (type != null)
             {
                 visualObject.VisualType = type.Value == "button" ? TypeVisualObject.Button : TypeVisualObject.Path;
             }
+
+           
+
 
             return visualObject;
 
