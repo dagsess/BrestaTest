@@ -11,32 +11,72 @@
             <ColumnDefinition/>
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
-            <Border Grid.Column="0" BorderBrush="Black" Margin="0" BorderThickness="0">
-                <Grid Grid.Column="0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
-                    </Grid.RowDefinitions>
+        <Border Grid.Column="0" BorderBrush="Black" Margin="0" BorderThickness="0">
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
                 <DockPanel Grid.Row="0" Margin="7">
+                    <Grid DockPanel.Dock="Right" MinWidth="30" Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*" MinHeight="100"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="1">
+                            <Button MinHeight="40" Margin="0 0 0 10">
+                                <Path Fill="Black" Data="M 0 6 L 12 6 L 6 0 Z"/>
+                            </Button>
+                            <Button MinHeight="40">
+                                <Path Fill="Black" Data="M 0 0 L 6 6 L 12 0 Z"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
                     <TextBlock DockPanel.Dock="Top" Text="Scales:"></TextBlock>
-                    <ListView Height="auto"/>
+                    <ListView x:Name="listScales" Height="auto">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn DisplayMemberBinding="{Binding Path=ConfigName}">Весы</GridViewColumn>
+                                <GridViewColumn DisplayMemberBinding="{Binding Path=Name}">Наменование</GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
                 </DockPanel>
+
                 <DockPanel Grid.Row="1" Margin="7">
                     <TextBlock DockPanel.Dock="Top" Text="Boards:"></TextBlock>
-                    <ListView Height="auto"/>
+                    <ListView x:Name="listBoards" Height="auto">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn DisplayMemberBinding="{Binding Path=ConfigName}">Знак</GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
                 </DockPanel>
-                </Grid>
-                
-            </Border>
+            </Grid>
+
+        </Border>
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*"/>
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <Canvas Grid.Row="0">
-                
-            </Canvas>
-            
+            <Border Margin="3" BorderThickness="2">
+                <Border.BorderBrush>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="CadetBlue"/>
+                        <GradientStop Color="AliceBlue" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.BorderBrush>
+                <ScrollViewer Grid.Row="0" Width="auto" HorizontalScrollBarVisibility="Visible">
+                    <Canvas x:Name="canvas" Width="3000">
+
+                    </Canvas>
+                </ScrollViewer>
+            </Border>
+
             <StackPanel Grid.Row="1" Margin="4 10 0 5">
                 <StackPanel Orientation="Horizontal" >
                     <Button Padding="4" Click="Button_Click">1. Загрузить конфигурацию</Button>
