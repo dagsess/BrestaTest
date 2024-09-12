@@ -46,14 +46,17 @@ namespace BrestaTest.Bresta
 
         public ScaleBoard Clone()
         {
-            return new ScaleBoard
+            ScaleBoard sb = new ScaleBoard
             {
                 Scale = m_scale.Clone(),
                 Board = m_board.Clone()
             };
+
+            sb.Update();
+            return sb;
         }
 
-        public void SetName(string name)
+        public void SetConfigName(string name)
         {
             if(m_scale != null)
             {
@@ -65,6 +68,7 @@ namespace BrestaTest.Bresta
             }
         }
 
+
         public void SetBodyColor(Color color1, Color color2)
         {
             foreach (var o in m_scale.Objects)
@@ -73,6 +77,12 @@ namespace BrestaTest.Bresta
                 o.VisualObject.Color2 = color2;
 
             }
+        }
+
+        public void Save()
+        {
+            m_scale.SaveToFile($"scales\\{m_scale.ConfigName}");
+            m_board.SaveToFile($"boards\\{m_board.ConfigName}");
         }
 
         public int Width => Right - Left;

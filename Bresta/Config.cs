@@ -7,96 +7,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace BrestaTest.Bresta
 {
-    public class KeyValueParameter
-    {
-        public string Comment { get; set; }
-        public string Key { get; set; }
-        public string Value { get; set; }
-
-        public static KeyValueParameter Parse(string s)
-        {
-            KeyValueParameter parameter = new KeyValueParameter { };
-            var spl = s.Split(':');
-
-            if (spl.Length > 0)
-            {
-                parameter.Key = spl[0].Trim();
-            }
-            if (spl.Length > 1)
-            {
-                parameter.Value = spl[1].Trim();
-            }
-            return parameter;
-        }
-
-        public KeyValueParameter Clone()
-        {
-            return new KeyValueParameter { Comment = Comment, Key = Key, Value = Value };
-        }
-    }
-
-    public class Section
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Comment { set; get; }
-
-        public Dictionary<string , KeyValueParameter> Parameters { get; set;} = new Dictionary<string, KeyValueParameter>();
-
-        public void AddParameter(KeyValueParameter keyValue)
-        {
-            if(Parameters.ContainsKey(keyValue.Key))
-            {
-                Parameters[keyValue.Key].Value += keyValue.Value;
-            }
-            else
-            {
-                Parameters.Add(keyValue.Key, keyValue);
-            }
-        }
-
-        public Section Clone()
-        {
-            return new Section { Comment = Comment, Name = Name, Parameters = Parameters.ToDictionary(kv => kv.Key, kv => kv.Value.Clone()) };
-        }
-
-    }
-
-    public class Object
-    {
-        public Dictionary<string, Section> Sections { get; set; } = new Dictionary<string, Section>();
-
-        public KeyValueParameter FindKeyValue(string paramName)
-        {
-            foreach (var section in Sections)
-            {
-                if(section.Value.Parameters.ContainsKey(paramName))
-                {
-                    return section.Value.Parameters[paramName];
-                }
-            }
-
-            return null;
-        }
-
-        public VisualObject VisualObject { get; set; }
-
-        public Object Clone()
-        {
-            return new Object
-            {
-                Sections =  Sections.ToDictionary(kv=>kv.Key, kv=>kv.Value.Clone()),
-                VisualObject = VisualObject.Clone()
-            };
-        }
-
-    }
-
     public class Config
     {
-
         const string REGEX_HEADER = @".*?(?<=\{)(.*?)(?=\}).*";
         const string REGEX_COMMENT = @"\s*?//(.*)";
         const string REGEX_SECTION = @".*?(?<=\[)(.+?)(?=\]).*";
@@ -114,6 +30,7 @@ namespace BrestaTest.Bresta
         const string PARAM_SIGN = "sign";
         const string PARAM_NAME = "name";
         const string PARAM_TYPE = "type";
+        const string PARAM_TEXT = "text";
 
         public string ConfigName { get; set; }
         public string Name
@@ -168,6 +85,19 @@ namespace BrestaTest.Bresta
             return values;
         }
 
+        public void SetName(string text)
+        {
+            foreach (var o in Objects)
+            {
+                foreach (var s in o.Sections.Where(s=>s.Key == SECTION_HEADER && s.Value.Parameters.ContainsKey(PARAM_NAME)))
+                {
+                    s.Value.Parameters[PARAM_NAME].Value = text;
+                    o.VisualObject.Name = text;
+                }
+            }
+           
+        }
+
         private static VisualObject ToVisualObjects(Object obj)
         {
             if (!obj.Sections.ContainsKey(SECTION_HEADER)) return null;
@@ -206,10 +136,11 @@ namespace BrestaTest.Bresta
 
                 var splBackground = backgroundStr.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (splBackground.Length > 1)
+                if (splBackground.Length > 2)
                 {
                     visualObject.Color1 = (Color)ColorConverter.ConvertFromString(splBackground[0]);
                     visualObject.Color2 = (Color)ColorConverter.ConvertFromString(splBackground[1]);
+                    visualObject.ColorType = splBackground[2];
                 }
             }
 
@@ -219,8 +150,11 @@ namespace BrestaTest.Bresta
                 visualObject.VisualType = type.Value == "button" ? TypeVisualObject.Button : TypeVisualObject.Path;
             }
 
-           
-
+            var stroke = obj.FindKeyValue(PARAM_STROKE);
+            if (stroke != null)
+            {
+                visualObject.Stroke = (Color)ColorConverter.ConvertFromString(stroke.Value);
+            }
 
             return visualObject;
 
@@ -254,6 +188,7 @@ namespace BrestaTest.Bresta
                         var matchComment = reComment.Match(line);
                         if(matchComment.Success)
                         {
+                            if (currentComment != string.Empty) currentComment += "\n";
                             currentComment += matchComment.Groups[1].Value.Trim();
                         }
 
@@ -342,9 +277,67 @@ namespace BrestaTest.Bresta
                 }
             }
 
-
             return false;
         }
 
+        private void ApplyVisualObject()
+        {
+            foreach (var o in Objects)
+            {
+                var vo = o.VisualObject;
+
+                o.SetParameter(PARAM_POS, $"{vo.Left} {vo.Top}");
+                o.SetParameter(PARAM_BACKGROUND, $"{vo.Color1} {vo.Color2} {vo.ColorType}");
+            }
+        }
+
+        public void SaveToFile(string fileName)
+        {
+            ApplyVisualObject();
+            using (var f = new StreamWriter(fileName))
+            {
+                foreach (var o in Objects)
+                {
+                    foreach (var s in o.Sections)
+                    {
+                        if(s.Key == SECTION_HEADER)
+                        {
+                            f.WriteLine(  s.Value.ToHeaderStyleString() );
+                            continue;
+                        }
+                        if(s.Key != SECTION_ROOT)
+                        {
+                            f.WriteLine($"[{s.Key}]");
+                        }
+
+                        foreach (var p in s.Value.Parameters)
+                        {
+                            if(p.Value.Comment != string.Empty)
+                            {
+                                f.WriteLine();
+                                f.WriteLine($"// {p.Value.Comment}");
+                            }
+
+                            if(p.Key == PARAM_TEXT)
+                            {
+                                var splitText = p.Value.Value.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                f.WriteLine();
+                                foreach (var txt in splitText)
+                                {
+                                    f.WriteLine($"text: {txt}");
+                                }
+                                f.WriteLine();
+                            }
+                            else
+                            {
+                                f.WriteLine($"{p.Key}: {p.Value.Value}");
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
     }
 }

@@ -22,6 +22,7 @@ namespace BrestaTest.Bresta
         public int Height { get; set; }
         public Color Color1 { get; set; } = Colors.Red;
         public Color Color2 { get; set; } = Colors.Blue;
+        public string ColorType { get; set; }
         public Color Stroke { get; set; } = Colors.Black;
         public string Name { get; set; }
         public string Sign { get; set; }
@@ -33,6 +34,7 @@ namespace BrestaTest.Bresta
             {
                 Color1 = Color1,
                 Color2 = Color2,
+                ColorType = ColorType,
                 Height = Height,
                 Left = Left,
                 Name = Name,

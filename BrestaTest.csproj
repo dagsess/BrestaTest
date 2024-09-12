@@ -63,8 +63,11 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Bresta\KeyValueParameter.cs" />
+    <Compile Include="Bresta\Object.cs" />
     <Compile Include="Bresta\ScaleBoard.cs" />
     <Compile Include="Bresta\Config.cs" />
+    <Compile Include="Bresta\Section.cs" />
     <Compile Include="Bresta\VisualObject.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

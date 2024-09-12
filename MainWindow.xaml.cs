@@ -1,9 +1,11 @@
 ﻿using BrestaTest.Bresta;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,63 +26,84 @@ namespace BrestaTest
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const string SCALESPAINT_NAME = "scalesPaint2.cfg";
         private Config[] m_scales;
         private Config[] m_boards;
-        private List<ScaleBoard> m_scaleBoards = new List<ScaleBoard>();
+        //private List<ScaleBoard> m_scaleBoards = new List<ScaleBoard>();
 
         private int m_space = 0;
         private int m_startX = 0;
 
+        public ObservableCollection<ScaleBoard> ScaleBoards { get; set; } = new ObservableCollection<ScaleBoard> { };
+
         public MainWindow()
         {
             InitializeComponent();
+
+            DataContext = this;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            buttonPanel.IsEnabled = false;
+            buttonPanel2.IsEnabled = false;
 
-            m_scales = GetConfigs(Directory.GetFiles(".\\scales", "*.cfg", SearchOption.AllDirectories));
-            m_boards = GetConfigs(Directory.GetFiles(".\\boards", "*.cfg", SearchOption.AllDirectories));
+            bool isSleep = (bool)isSlow.IsChecked;
 
-            foreach (var scale in m_scales)
+            await Task.Factory.StartNew(() =>
             {
-                var board = m_boards.Where(c => c.ConfigName == scale.ConfigName).FirstOrDefault();
+                m_scales = GetConfigs(Directory.GetFiles(".\\scales", "*.cfg", SearchOption.AllDirectories));
+                m_boards = GetConfigs(Directory.GetFiles(".\\boards", "*.cfg", SearchOption.AllDirectories));
 
-                if(board != null)
+                List<ScaleBoard> tmpScaleBoards = new List<ScaleBoard>();
+
+                foreach (var scale in m_scales)
                 {
-                    m_scaleBoards.Add(new ScaleBoard { Board = board, Scale = scale });
+                    var board = m_boards.Where(c => c.ConfigName == scale.ConfigName).FirstOrDefault();
+
+                    if (board != null)
+                    {
+                        tmpScaleBoards.Add(new ScaleBoard { Board = board, Scale = scale });
+                    }
                 }
-            }
 
-            Repaint();
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    ScaleBoards.Clear();
+                }));
 
-            var orderedScaleBoards = m_scaleBoards.OrderBy(c => c.Left).ToArray();
+                foreach (var scale in tmpScaleBoards.OrderBy(c => c.Left))
+                {
+                    if(isSleep)
+                    {
+                        Thread.Sleep(500);
+                    }
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ScaleBoards.Add(scale);
+                        Repaint();
+                    }));
+                 }
+
+                if (ScaleBoards.Count > 1)
+                {
+                    m_space = ScaleBoards[1].Left - ScaleBoards[0].Right;
+                    m_startX = ScaleBoards[0].Left;
+                }
+
+            });
+
+            buttonPanel.IsEnabled = true;
+            buttonPanel2.IsEnabled = true;
 
 
-            if(orderedScaleBoards.Length > 1)
-            {
-                m_space = orderedScaleBoards[1].Left - orderedScaleBoards[0].Right;
-                m_startX = orderedScaleBoards[0].Left;
-            }
-
-            listScales.Items.Clear();
-            foreach (var sb in orderedScaleBoards)
-            {
-                listScales.Items.Add(sb);
-            }
-
-            listBoards.Items.Clear();
-            foreach (var board in m_boards)
-            {
-                listBoards.Items.Add(board);
-            }
         }
 
         private void Repaint()
         {
             canvas.Children.Clear();
 
-            foreach (var sb in m_scaleBoards)
+            foreach (var sb in ScaleBoards)
             {
                 foreach (var vo in sb.Scale.Objects.Select(o => o.VisualObject))
                 {
@@ -151,10 +174,6 @@ namespace BrestaTest
                 Canvas.SetLeft(text, visualObject.Left);
                 Canvas.SetTop(text, visualObject.Top);
             }
-            
-
-
-
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -166,10 +185,9 @@ namespace BrestaTest
 
             var selected = (ScaleBoard)listScales.SelectedItem;
 
-            listScales.Items.Remove(selected);
-            listScales.Items.Insert(selectedIndex - 1, selected);
+            ScaleBoards.Remove(selected);
+            ScaleBoards.Insert(selectedIndex - 1, selected);
             listScales.SelectedIndex = selectedIndex - 1;
-
 
             UpdateCoordinates();
             Repaint();
@@ -184,8 +202,8 @@ namespace BrestaTest
 
             var selected = (ScaleBoard)listScales.SelectedItem;
 
-            listScales.Items.Remove(selected);
-            listScales.Items.Insert(selectedIndex + 1, selected);
+            ScaleBoards.Remove(selected);
+            ScaleBoards.Insert(selectedIndex + 1, selected);
             listScales.SelectedIndex = selectedIndex + 1;
 
             UpdateCoordinates();
@@ -212,24 +230,41 @@ namespace BrestaTest
 
         private void Button_Click_3(object sender, RoutedEventArgs e)
         {
+            if(ScaleBoards.Count == 0) return;
+
+            var found = ScaleBoards.Where(s=>s.Scale.ConfigName == SCALESPAINT_NAME).Count();
+
+            if (found > 0) return;
+
             Random rnd = new Random();
 
-            int i = rnd.Next(0, listScales.Items.Count);
+            int i = rnd.Next(0, ScaleBoards.Count);
 
-            var sb = listScales.Items[i] as ScaleBoard;
+            var sb = ScaleBoards[i];
 
             var clone = sb.Clone();
-            clone.SetName("scalesPaint2");
+            clone.SetConfigName(SCALESPAINT_NAME);
+            clone.Scale.SetName("Весы краски 2");
             clone.SetBodyColor(Colors.Crimson, Colors.HotPink);
 
-            var last = listScales.Items[i] as ScaleBoard;
+            var last = ScaleBoards.Last();
 
             clone.MoveHorizontal(last.Right + m_space - clone.Left);
 
-            listScales.Items.Add(clone);
+            ScaleBoards.Add(clone);
 
-            UpdateCoordinates();
+            //UpdateCoordinates();
             Repaint();
+        }
+
+        private void Button_Click_4(object sender, RoutedEventArgs e)
+        {
+            if (ScaleBoards.Count == 0) return;
+
+            foreach (var sb in ScaleBoards)
+            {
+                sb.Save();
+            }
         }
     }
 }

@@ -12,51 +12,33 @@
             <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Border Grid.Column="0" BorderBrush="Black" Margin="0" BorderThickness="0">
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-
-                <DockPanel Grid.Row="0" Margin="7">
-                    <Grid DockPanel.Dock="Right" MinWidth="30" Margin="10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*" MinHeight="100"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <StackPanel Grid.Row="1">
-                            <Button MinHeight="40" Margin="0 0 0 10" Click="Button_Click_1">
-                                <Path Fill="Black" Data="M 0 6 L 12 6 L 6 0 Z"/>
-                            </Button>
-                            <Button MinHeight="40" Click="Button_Click_2">
-                                <Path Fill="Black" Data="M 0 0 L 6 6 L 12 0 Z"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock DockPanel.Dock="Top" Text="Scales:"></TextBlock>
-                    <ListView x:Name="listScales" Height="auto">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding Path=Name}">Конфиг</GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Path=ScaleName}">Весы</GridViewColumn>
-                                <GridViewColumn DisplayMemberBinding="{Binding Path=Width}">Ширина объекта</GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                </DockPanel>
-
-                <DockPanel Grid.Row="1" Margin="7">
-                    <TextBlock DockPanel.Dock="Top" Text="Boards:"></TextBlock>
-                    <ListView x:Name="listBoards" Height="auto">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn DisplayMemberBinding="{Binding Path=ConfigName}">Знак</GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                </DockPanel>
-            </Grid>
+            <DockPanel Grid.Column="0" Margin="7">
+                <Grid DockPanel.Dock="Right" MinWidth="30" Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*" MinHeight="100"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="1" x:Name="buttonPanel2">
+                        <Button MinHeight="40" Margin="0 0 0 10" Click="Button_Click_1">
+                            <Path Fill="Black" Data="M 0 6 L 12 6 L 6 0 Z"/>
+                        </Button>
+                        <Button MinHeight="40" Click="Button_Click_2">
+                            <Path Fill="Black" Data="M 0 0 L 6 6 L 12 0 Z"/>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                <TextBlock DockPanel.Dock="Top" Text="Scales:"></TextBlock>
+                <ListView x:Name="listScales" Height="auto" ItemsSource="{Binding  ScaleBoards}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn DisplayMemberBinding="{Binding Path=Name}">Конфиг</GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Path=ScaleName}">Весы</GridViewColumn>
+                            <GridViewColumn DisplayMemberBinding="{Binding Path=Width}">Ширина объекта</GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </DockPanel>
 
         </Border>
         <Grid Grid.Column="1">
@@ -79,9 +61,11 @@
             </Border>
 
             <StackPanel Grid.Row="1" Margin="4 10 0 5">
-                <StackPanel Orientation="Horizontal" >
-                    <Button Padding="4" Click="Button_Click">1. Загрузить конфигурацию</Button>
+                <StackPanel x:Name="buttonPanel" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button  Padding="4" Click="Button_Click">1. Загрузить конфигурацию</Button>
                     <Button Margin ="10 0 0 0" Padding="4" Click="Button_Click_3">2. Добавить весы краски</Button>
+                    <Button Margin ="10 0 0 0" Padding="4" Click="Button_Click_4">3. Сохранить</Button>
+                    <CheckBox x:Name="isSlow" IsChecked="True" Margin ="10 0 0 0">Искусственное замедление</CheckBox>
                 </StackPanel>
             </StackPanel>
         </Grid>
